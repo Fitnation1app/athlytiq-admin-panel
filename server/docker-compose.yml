@@ -1,0 +1,11 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"  # Maps host port 8000 to container port 8000
+    volumes:
+      - ./app:/app/app
+    environment:
+      - PORT=8000
+      - JWT_SECRET=your-secret-key-here
+    restart: unless-stopped
