@@ -3,7 +3,7 @@ import ifteeImg from './iftee.jpg'
 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import { ChevronDown } from "lucide-react"  
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,9 +19,34 @@ const filterOptions = [
 ]
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<any[]>([])
   const [search, setSearch] = useState("")
   const [filterBy, setFilterBy] = useState<"name" | "email" | "phone">("name")
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+   useEffect(() => {
+    fetch("http://localhost:8000/users/")
+      .then(res => res.json())
+      .then(data => {
+        // Map backend fields to frontend fields
+        const mapped = data.map((user: any, idx: number) => ({
+          id: idx + 1,
+          name: user.username || "",
+          surname: "",
+          email: user.email || "",
+          idType: user.role || "",
+          phone: user.phone_no || "",
+          status: user.status || "",
+          role: user.role || "",
+          photo: "",
+        }))
+        setUsers(mapped)
+      })
+      .catch(err => {
+        console.error("Failed to fetch users:", err)
+        setUsers([])
+      })
+  }, [])
 
  const filteredUsers = users.filter((user) => {
     const value =
@@ -154,7 +179,7 @@ export default function UsersPage() {
                     <TableCell>
                       <div
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          user.status === "Active"
+                          user.status === "active"
                             ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
                             : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
                         }`}
@@ -180,81 +205,3 @@ export default function UsersPage() {
     </div>
   )
 }
-
-const users = [
-  {
-    id: "1",
-    name: "Iftekharul Islam",
-    surname: "Iftee",
-    email: "iftee@example.com",
-    idType: "ID",
-    phone: "+27 71 234 5678",
-    status: "Active",
-    photo: ifteeImg,
-  },
-  {
-    id: "2",
-    name: "Arqam Bin",
-    surname: "Almas",
-    email: "arqam@example.com",
-    idType: "ID",
-    phone: "+27 82 345 6789",
-    status: "Active",
-    photo:"arqam.jpg"
-  },
-  {
-    id: "3",
-    name: "Ruslan",
-    surname: "Sunbeeb",
-    email: "ruslan@example.com",
-    idType: "ID",
-    phone: "+27 63 456 7890",
-    status: "Active",
-    photo:"ruslan.jpg"
-  },
-  {
-    id: "4",
-    name: "Ibrahim Reza",
-    surname: "Rabbi",
-    email: "rabbi@example.com",
-    idType: "ID",
-    phone: "+27 74 567 8901",
-    status: "Active",
-  },
-  {
-    id: "5",
-    name: "Trevor",
-    surname: "Noah",
-    email: "trevor.noah@example.com",
-    idType: "ID",
-    phone: "01234567890",
-    status: "Active",
-  },
-  {
-    id: "6",
-    name: "Patrice",
-    surname: "Motsepe",
-    email: "patrice.motsepe@example.com",
-    idType: "ID",
-    phone: "01567890123",
-    status: "Active",
-  },
-  {
-    id: "7",
-    name: "Caster",
-    surname: "Semenya",
-    email: "caster.semenya@example.com",
-    idType: "ID",
-    phone: "01897854632",
-    status: "Active",
-  },
-  {
-    id: "8",
-    name: "Elon",
-    surname: "Musk",
-    email: "elon.musk@example.com",
-    idType: "Asylum Seeker",
-    phone: "01678901011",
-    status: "Active",
-  },
-]

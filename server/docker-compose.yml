@@ -9,3 +9,5 @@ services:
       - PORT=8000
       - JWT_SECRET=your-secret-key-here
     restart: unless-stopped
+    env_file:
+      - .env

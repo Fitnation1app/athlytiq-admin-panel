@@ -28,6 +28,7 @@ app.include_router(users_router.router, prefix="/users", tags=["Users"])
 app.include_router(workouts_router.router, prefix="/workouts", tags=["Workouts"])
 
 
+
 @app.get("/")
 async def root():
     return {"message":"Hello world from fastAPI"}
