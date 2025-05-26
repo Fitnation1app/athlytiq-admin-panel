@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client
 from typing import List 
-from app.routers import users_router,workouts_router
+from app.routers import users_router,workouts_router,community_router
 from app.db import * 
 from dotenv import load_dotenv
 import uuid 
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(users_router.router, prefix="/users", tags=["Users"])
 app.include_router(workouts_router.router, prefix="/workouts", tags=["Workouts"])
+app.include_router(community_router.router, prefix="/communities", tags=["Communities"])
 
 
 

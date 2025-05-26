@@ -1,6 +1,6 @@
 "use client"
-import ifteeImg from './iftee.jpg'
-
+//import ifteeImg from './iftee.jpg'
+import { X } from "lucide-react" 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import { ChevronDown } from "lucide-react"  
 import { useEffect, useState } from "react"
@@ -19,6 +19,9 @@ const filterOptions = [
 ]
 
 export default function UsersPage() {
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalImg, setModalImg] = useState("")
+
   const [users, setUsers] = useState<any[]>([])
   const [search, setSearch] = useState("")
   const [filterBy, setFilterBy] = useState<"name" | "email" | "phone">("name")
@@ -29,8 +32,8 @@ export default function UsersPage() {
       .then(res => res.json())
       .then(data => {
         // Map backend fields to frontend fields
-        const mapped = data.map((user: any, idx: number) => ({
-          id: idx + 1,
+        const mapped = data.map((user: any) => ({
+          id: user.id,
           name: user.username || "",
           surname: "",
           email: user.email || "",
@@ -38,7 +41,7 @@ export default function UsersPage() {
           phone: user.phone_no || "",
           status: user.status || "",
           role: user.role || "",
-          photo: "",
+          photo: user.profile_picture_url || "" ,
         }))
         setUsers(mapped)
       })
@@ -92,6 +95,30 @@ export default function UsersPage() {
         </div>
        
       </div>
+
+      {modalOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+    onClick={() => setModalOpen(false)}
+  >
+    <div
+      className="relative bg-transparent"
+      onClick={e => e.stopPropagation()}
+    >
+      <button
+        className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-200"
+        onClick={() => setModalOpen(false)}
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <img
+        src={modalImg}
+        alt="Profile"
+        className="max-w-[90vw] max-h-[80vh] rounded shadow-lg"
+      />
+    </div>
+  </div>
+)}
 
       <Card>
         <CardHeader className="p-4">
@@ -162,13 +189,20 @@ export default function UsersPage() {
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <Avatar>
-                        <AvatarImage src={typeof user.photo === "string" ? user.photo : user.photo?.src} alt={user.name} />
-                         <AvatarFallback>
-                          {user.name[0]}
-                          {user.surname ? user.surname[0] : ""}
-                        </AvatarFallback>
-                      </Avatar>
+                      <Avatar
+  className="cursor-pointer"
+  onClick={() => {
+    if (user.photo) {
+      setModalImg(user.photo)
+      setModalOpen(true)
+    }
+  }}
+>
+  <AvatarImage src={user.photo} alt={user.name} />
+  <AvatarFallback>
+    {user.name[0]}
+  </AvatarFallback>
+</Avatar>
                     </TableCell>
                     <TableCell className="font-medium">
                       {user.name} {user.surname}

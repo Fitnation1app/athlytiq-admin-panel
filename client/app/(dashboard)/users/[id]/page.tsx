@@ -99,6 +99,7 @@ export default function UserProfilePage(props: { params: Promise<{ id: string }>
 
   useEffect(() => {
     fetch(`http://localhost:8000/users/${params.id}`)
+    
       .then((res) => res.json())
       .then((data) => {
         setUser(data);
@@ -205,34 +206,28 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="idType">ID Type</Label>
-                <Select
-                  value={form.idType}
-                  onValueChange={(value) => handleChange("idType", value)}
-                >
-                  <SelectTrigger id="idType">
-                    <SelectValue placeholder="Select ID type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ID">ID</SelectItem>
-                    <SelectItem value="Asylum Seeker">Asylum Seeker</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Input
+                     id="idType"
+                     value={form.idType}
+                     readOnly
+                   />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Account Status</Label>
-                <Select
-                  value={form.status}
-                  onValueChange={(value) => handleChange("status", value)}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                       <Label htmlFor="status">Account Status</Label>
+                          <Select
+                            value={form.status}
+                         onValueChange={value => handleChange("status", value)}
+                         disabled={form.idType === "admin"} // <-- disable if admin
+                              >
+                          <SelectTrigger id="status" disabled={form.idType === "admin"}>
+                            <SelectValue placeholder="Select status" />
+                             </SelectTrigger>
+                                  <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                           <SelectItem value="suspended">Suspended</SelectItem>
+                               </SelectContent>
+                                   </Select>
+                                </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
