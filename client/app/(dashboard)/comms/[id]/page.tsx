@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { ArrowLeft, UserCog, Users, History } from "lucide-react"
 import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
-
+import { use } from "react"
 function HistoryModal({ item, onClose }: { item: any, onClose: () => void }) {
   if (!item) return null;
   return (
@@ -28,15 +28,36 @@ function HistoryModal({ item, onClose }: { item: any, onClose: () => void }) {
   );
 }
 
-export default function CommunityInfoPage(props: { params: { id: string } }) {
-  const { params } = props;
-  const community = communities.find((c) => c.id === params.id) || communities[0];
+export default function CommunityInfoPage(props: { params: Promise<{ id: string }> }) {
+  const params  = use(props.params);
+  //const community = communities.find((c) => c.id === params.id) || communities[0];
   const [selectedHistory, setSelectedHistory] = useState<any | null>(null);
+  const [community, setCommunity] = useState<any>(null);
+  const [name, setName] = useState("");
+  
+  const handleSave = async () => {
+  await fetch(`http://localhost:8000/communities/${params.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  // Optionally refetch or show a success message
+};
 
   function formatDate(dateString: string) {
     const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
   }
+
+    useEffect(() => {
+      if (!params?.id) return;
+    fetch(`http://localhost:8000/communities/${params.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setCommunity(data);
+        setName(data.name);
+      });
+  }, [params.id]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +69,7 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {community.name}
+            {community?.name || ""}
           </h1>
           <p className="text-muted-foreground">Community info and management</p>
         </div>
@@ -76,29 +97,33 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
       <CardTitle>Community Profile</CardTitle>
       <CardDescription>View and update community details</CardDescription>
     </CardHeader>
-    <CardContent className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="communityName">Community Name</Label>
-          <Input id="communityName" defaultValue={community.name} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="owner">Owner</Label>
-          <Input id="owner" defaultValue={community.owner} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactNumber">Contact Number</Label>
-          <Input id="contactNumber" defaultValue={community.phone} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactEmail">Contact Email</Label>
-          <Input id="contactEmail" type="email" defaultValue={community.email} />
-        </div>
-      </div>
-    </CardContent>
+ <CardContent className="space-y-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-2">
+      <Label htmlFor="communityName">Community Name</Label>
+      <Input
+        id="communityName"
+        value={name}
+        onChange={e => setName(e.target.value)}
+      />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="owner">Owner</Label>
+      <Input id="owner" value={community?.creator_name || ""} readOnly />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="contactNumber">Contact Number</Label>
+      <Input id="contactNumber" value={community?.creator_phone || ""} readOnly />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="contactEmail">Contact Email</Label>
+      <Input id="contactEmail" type="email" value={community?.creator_email || ""} readOnly />
+    </div>
+  </div>
+</CardContent>
     <CardFooter className="flex justify-between">
       <Button variant="outline">Reset</Button>
-      <Button>Save Changes</Button>
+      <Button onClick={handleSave}>Save Changes</Button>
     </CardFooter>
   </Card>
 </TabsContent>
@@ -124,7 +149,7 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-  {community.members && community.members.length > 0 ? (
+  {/*community.members && community.members.length > 0 ? (
     community.members.map((member: any, idx: number) => {
       const user = users.find((u) => u.id === member.id);
       return (
@@ -171,8 +196,8 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
       <TableCell colSpan={7} className="text-muted-foreground">
         No members yet.
       </TableCell>
-    </TableRow>
-  )}
+    </TableRow> 
+  )*/}
 </TableBody>
         </Table>
       </div>
@@ -187,7 +212,7 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
               <CardDescription>Community Activity History</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
+              {/*<ul className="space-y-2">
                 {community.history && community.history.length > 0 ? (
                   community.history.map((item: any, idx: number) => (
                     <li
@@ -207,7 +232,7 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
                 ) : (
                   <li className="text-muted-foreground">No history yet.</li>
                 )}
-              </ul>
+              </ul> */}
             </CardContent>
           </Card>
           {selectedHistory && (
@@ -218,132 +243,3 @@ export default function CommunityInfoPage(props: { params: { id: string } }) {
     </div>
   )
 }
-
-const users = [
-  {
-    id: "1",
-    name: "Thabo",
-    surname: "Mbeki",
-    email: "thabo.mbeki@example.com",
-    phone: "+27 71 234 5678",
-    status: "Active",
-    photo: "/avatars/thabo.jpg",
-  },
-  {
-    id: "2",
-    name: "Nomzamo",
-    surname: "Mbatha",
-    email: "nomzamo.mbatha@example.com",
-    phone: "+27 82 345 6789",
-    status: "Active",
-    photo: "/avatars/nomzamo.jpg",
-  },
-  {
-    id: "3",
-    name: "Siya",
-    surname: "Kolisi",
-    email: "siya.kolisi@example.com",
-    phone: "+27 63 456 7890",
-    status: "Active",
-    photo: "/avatars/siya.jpg",
-  },
-  {
-    id: "4",
-    name: "Bonang",
-    surname: "Matheba",
-    email: "bonang.matheba@example.com",
-    phone: "+27 74 567 8901",
-    status: "Active",
-    photo: "/avatars/bonang.jpg",
-  },
-  {
-    id: "5",
-    name: "Trevor",
-    surname: "Noah",
-    email: "trevor.noah@example.com",
-    phone: "+27 85 678 9012",
-    status: "Active",
-    photo: "/avatars/trevor.jpg",
-  },
-];
-
-const communities = [
-  {
-    id: "1",
-    name: "FitNation Runners",
-    owner: "Thabo Mbeki",
-    phone: "+27 71 234 5678",
-    email: "fitnation.runners@example.com",
-    status: "Active",
-    members: [
-      { id: "1", role: "Owner" }, // Thabo Mbeki
-      { id: "2", role: "Member" }, // Nomzamo Mbatha
-    ],
-    history: [
-      { type: "post", description: "Uploaded a group run event", date: "2024-05-20" },
-      { type: "comment", description: "Commented on a post", date: "2024-05-18" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Yoga Enthusiasts",
-    owner: "Nomzamo Mbatha",
-    phone: "+27 82 345 6789",
-    email: "yoga.enthusiasts@example.com",
-    status: "Active",
-    members: [
-      { id: "2", role: "Owner" }, // Nomzamo Mbatha
-      { id: "3", role: "Member" }, // Siya Kolisi
-    ],
-    history: [
-      { type: "post", description: "Shared a yoga session", date: "2024-05-19" },
-      { type: "comment", description: "Commented on a yoga tip", date: "2024-05-17" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Strength Squad",
-    owner: "Siya Kolisi",
-    phone: "+27 63 456 7890",
-    email: "strength.squad@example.com",
-    status: "Active",
-    members: [
-      { id: "3", role: "Owner" }, // Siya Kolisi
-      { id: "4", role: "Member" }, // Bonang Matheba
-    ],
-    history: [
-      { type: "post", description: "Uploaded a strength workout", date: "2024-05-15" },
-      { type: "comment", description: "Commented on a workout", date: "2024-05-14" },
-    ],
-  },
-  {
-    id: "4",
-    name: "Wellness Warriors",
-    owner: "Bonang Matheba",
-    phone: "+27 74 567 8901",
-    email: "wellness.warriors@example.com",
-    status: "Active",
-    members: [
-      { id: "4", role: "Owner" }, // Bonang Matheba
-      { id: "5", role: "Member" }, // Trevor Noah
-    ],
-    history: [
-      { type: "post", description: "Shared a wellness tip", date: "2024-05-10" },
-    ],
-  },
-  {
-    id: "5",
-    name: "Comedy Cardio",
-    owner: "Trevor Noah",
-    phone: "+27 85 678 9012",
-    email: "comedy.cardio@example.com",
-    status: "Active",
-    members: [
-      { id: "5", role: "Owner" }, // Trevor Noah
-      { id: "1", role: "Member" }, // Thabo Mbeki
-    ],
-    history: [
-      { type: "comment", description: "Commented on a funny workout", date: "2024-05-12" },
-    ],
-  },
-]
