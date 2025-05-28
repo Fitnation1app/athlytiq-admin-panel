@@ -20,3 +20,6 @@ ADD CONSTRAINT phone_no_check CHECK (phone_no ~ '^\d{11}$');
 
 ALTER TABLE communities
 ADD COLUMN member_count INTEGER DEFAULT 0 CHECK (member_count >= 0);
+
+ALTER TABLE communities
+ADD COLUMN member_count INTEGER DEFAULT 0 CHECK (member_count >= 0);
