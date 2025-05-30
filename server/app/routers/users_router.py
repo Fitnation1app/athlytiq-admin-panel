@@ -17,7 +17,11 @@ async def get_users():
     users = response.data if isinstance(response.data, list) else [response.data]
     # Flatten profile_picture_url for each user
     for user in users:
-        user["profile_picture_url"] = user.get("profiles", {}).get("profile_picture_url", "")
+        profiles = user.get("profiles")
+        if profiles and isinstance(profiles, dict):
+            user["profile_picture_url"] = profiles.get("profile_picture_url", "")
+        else:
+            user["profile_picture_url"] = ""
         user.pop("profiles", None)
     return users
 
@@ -25,7 +29,7 @@ async def get_users():
 async def get_user(id: str):
     response = (
         supabase.table("users")
-        .select("username,email,status,phone_no,role,profiles(profile_picture_url)")
+        .select("id,username,email,status,phone_no,role,profiles(profile_picture_url)")
         .eq("id", id)
         .single()
         .execute()
@@ -33,6 +37,10 @@ async def get_user(id: str):
     user = response.data
     if not user:
         return {"detail": "User not found"}
-    user["profile_picture_url"] = user.get("profiles", {}).get("profile_picture_url", "")
+    profiles = user.get("profiles")
+    if profiles and isinstance(profiles, dict):
+        user["profile_picture_url"] = profiles.get("profile_picture_url", "")
+    else:
+        user["profile_picture_url"] = ""
     user.pop("profiles", None)
     return user

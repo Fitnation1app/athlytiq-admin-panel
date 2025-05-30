@@ -2,7 +2,7 @@
 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar"
 import { ChevronDown } from "lucide-react"  
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,13 @@ export default function UsersPage() {
   const [search, setSearch] = useState("")
   const [filterBy, setFilterBy] = useState<"name" | "email" | "phone">("name")
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [communities, setCommunities] = useState<any[]>([]);
 
+    useEffect(() => {
+    fetch("http://localhost:8000/communities")
+      .then(res => res.json())
+      .then(data => setCommunities(data));
+  }, []);
 
     const filteredCommunities = communities.filter((community) => {
   const value =
@@ -106,25 +112,27 @@ export default function UsersPage() {
                   <TableRow key={community.id}>
                     <TableCell>
                       <Avatar>
-                        <AvatarImage src={typeof community.photo === "string" ? community.photo : community.photo?.src} alt={community.name} />
-                         <AvatarFallback>
-                          {community.name[0]}
-                        </AvatarFallback>
+                        <AvatarImage src={community.image_url || undefined} alt={community.name} />
+                        <AvatarFallback>
+                            {community.name?.[0] || "?"}
+                            </AvatarFallback>
                       </Avatar>
                     </TableCell>
                     <TableCell className="font-medium">{community.name}</TableCell>
-                    <TableCell>{community.owner}</TableCell>
-                    <TableCell>{community.members}</TableCell>
-                    <TableCell>{community.contact}</TableCell>
+                    <TableCell>{community.creator_name}</TableCell>
+                    <TableCell>{community.member_count}</TableCell>
+                    <TableCell>{community.creator_phone}</TableCell>
                     <TableCell>
+                      
                       <div
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          community.status === "Active"
+                          community.community_status === "active"
                             ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
                             : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
                         }`}
                       >
-                        {community.status}
+                            {community.community_status.charAt(0).toUpperCase() + community.community_status.slice(1)}
+
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
