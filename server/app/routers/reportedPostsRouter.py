@@ -1,43 +1,34 @@
 from fastapi import APIRouter, HTTPException
 from app.db.supabase_config import supabase
-from app.models.reportedPostsModel import ReportedPost
 import logging
 
 router = APIRouter()
 
-@router.get("/", status_code=201)
-async def report_post(report: ReportedPost):
-    
-   
-    post_check = supabase.table("posts").select("id").eq("id", str(report.reported_post_id)).execute()
-    if not post_check.data:
-        raise HTTPException(status_code=404, detail="Post not found")
+@router.get("/", status_code=200)
+async def get_reported_posts():
+    try:
+        logging.info("Fetching reported posts with usernames and profile pictures...")
 
-    
-    reporter_check = supabase.table("users").select("id").eq("id", str(report.reportedby_userid)).execute()
-    if not reporter_check.data:
-        raise HTTPException(status_code=404, detail="Reporting user not found")
+        response = supabase.table("reported_posts").select(
+            """
+            reported_post_id,
+            posts(id, content, media_url),
+            reporter:reportedby_userid(id, username, profiles(profile_picture_url)),
+            reported_user:reported_userid(id, username, profiles(profile_picture_url))
+            """
+        ).execute()
 
-   
-    reported_user_check = supabase.table("users").select("id").eq("id", str(report.reported_userid)).execute()
-    if not reported_user_check.data:
-        raise HTTPException(status_code=404, detail="Reported user not found")
+        if not response.data:
+            return {
+                "message": "No reported posts found.",
+                "data": []
+            }
 
-    
-    existing_report = (
-        supabase.table("reported_posts")
-        .select("*")
-        .eq("reported_post_id", str(report.reported_post_id))
-        .eq("reportedby_userid", str(report.reportedby_userid))
-        .execute()
-    )
-    if existing_report.data:
-        raise HTTPException(status_code=400, detail="You have already reported this post")
+        return {
+            "message": "Reported posts fetched successfully",
+            "data": response.data
+        }
 
-    
-    response = supabase.table("reported_posts").insert(report.dict()).execute()
-    if response.error:
-        logging.error(f"Supabase insert error: {response.error}")
-        raise HTTPException(status_code=500, detail="Failed to report post")
-
-    return {"message": "Post reported successfully"}
+    except Exception as e:
+        logging.exception("🔥 FULL ERROR STACK TRACE")
+        raise HTTPException(status_code=500, detail=f"Backend crashed: {str(e)}")

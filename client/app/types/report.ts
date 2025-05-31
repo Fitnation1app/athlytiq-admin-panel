@@ -1,9 +1,13 @@
 export type Report = {
-  id: string | number;
+  id: number;
   postTitle: string;
-  author:string;
-  reportedBy: string;
-  reason: string;
   content: string;
-  imageUrl?: string;
+  imageUrl: string;
+  reason: string;
+  reportedBy: string;
+  reportedById: string;
+  reportedByPhoto?: string;
+  author: string;
+  reportedUserId: string;
+  reportedUserPhoto?: string;
 };

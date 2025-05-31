@@ -9,21 +9,33 @@ router = APIRouter()
 
 @router.get("/", response_model=list[communityModel.Community])
 async def get_communities():
+    # Step 1: Get all communities and their creators
     response = (
         supabase.table("communities")
-        .select("id, name, image_url, member_count, community_status, users!communities_creator_user_id_fkey(username, phone_no)")
+        .select("id, name, image_url, community_status, users!communities_creator_user_id_fkey(username, phone_no)")
         .execute()
     )
-    communities_raw = response.data if isinstance(response.data, list) else [response.data]
 
+    communities_raw = response.data if isinstance(response.data, list) else [response.data]
     communities = []
+
+    # Step 2: Count members for each community from community_members table
+    member_counts_resp = supabase.table("community_members").select("community_id").execute()
+    member_counts_raw = member_counts_resp.data or []
+
+    # Build a dictionary to count members
+    from collections import Counter
+    member_counts = Counter([row["community_id"] for row in member_counts_raw])
+
+    # Step 3: Construct the response
     for item in communities_raw:
         user_info = item.get("users", {})
+        comm_id = item["id"]
         community = {
-            "id": item["id"],
+            "id": comm_id,
             "name": item["name"],
             "image_url": item["image_url"],
-            "member_count": item.get("member_count", 0),
+            "member_count": member_counts.get(comm_id, 0),
             "community_status": item.get("community_status", "active"),
             "creator_name": user_info.get("username", "Unknown"),
             "creator_phone": user_info.get("phone_no", ""),
@@ -31,6 +43,7 @@ async def get_communities():
         communities.append(community)
 
     return communities
+
 
 @router.get("/{id}")
 async def get_community(id: str):
