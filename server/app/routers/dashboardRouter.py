@@ -48,6 +48,7 @@ async def get_recent_posts():
                 content,
                 created_at,
                 post_type,
+                media_url,
                 user:user_id(
                     username,
                     profiles(profile_picture_url)
@@ -93,6 +94,7 @@ async def get_recent_posts():
                 "content": post["content"],
                 "created_at": post["created_at"],
                 "post_type": post.get("post_type", "unknown"),
+                "media_url": post.get("media_url", ""),
                 "reactions": react_map.get(post["id"], {})
             })
 

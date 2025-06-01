@@ -40,10 +40,19 @@ export function RecentTransactions() {
 </Avatar>
           <div className="ml-4 space-y-1">
             <p className="text-sm font-medium leading-none">{post.username}</p>
-            <p className="text-sm text-muted-foreground">
-              {new Date(post.created_at).toLocaleDateString()}
-            </p>
+<p className="text-sm text-muted-foreground">
+  {new Date(post.created_at).toLocaleDateString()} •{" "}
+  {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+</p>
+
             <p className="text-xs text-muted-foreground truncate max-w-xs">{post.content}</p>
+            {post.media_url && (
+  <img
+    src={post.media_url}
+    alt="Post media"
+    className="mt-2 rounded-lg border max-h-64 object-cover"
+  />
+)}
           </div>
           <div className="ml-auto flex items-center font-medium text-blue-600">
             <ThumbsUp className="h-4 w-4 mr-1" />
