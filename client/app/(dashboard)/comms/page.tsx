@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, UserCog } from "lucide-react"
 import Link from "next/link"
 //import { CreateUserDialog } from "@/components/create-user-dialog"
-
+import useAuthGuard from "@/hooks/useAuthGuard"
 
 export default function UsersPage() {
+  const isChecking = useAuthGuard()
   const [search, setSearch] = useState("")
   const [filterBy, setFilterBy] = useState<"name" | "email" | "phone">("name")
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -23,6 +24,8 @@ export default function UsersPage() {
       .then(res => res.json())
       .then(data => setCommunities(data));
   }, []);
+
+  if (isChecking) return null
 
     const filteredCommunities = communities.filter((community) => {
   const value =
@@ -121,7 +124,9 @@ export default function UsersPage() {
                     <TableCell className="font-medium">{community.name}</TableCell>
                     <TableCell>{community.creator_name}</TableCell>
                     <TableCell>{community.member_count}</TableCell>
-                    <TableCell>{community.creator_phone}</TableCell>
+                    <TableCell className={!community.creator_phone ? "text-muted-foreground" : ""}>
+  {community.creator_phone ? community.creator_phone : "not given"}
+</TableCell>
                     <TableCell>
                       
                       <div

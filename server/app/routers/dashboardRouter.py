@@ -195,8 +195,11 @@ def calculate_change(current: int, previous: int) -> float | str:
     if previous == 0:
         if current == 0:
             return 0.0
-        return "N/A"  # or "∞", or "new", or return None and handle it in the frontend
-    return round(((current - previous) / previous) * 100, 2)
+        return "New"
+
+    change = ((current - previous) / previous) * 100
+    capped_change = min(change, 500)  # cap to +500% for display sanity
+    return round(capped_change, 2)
 
 
 

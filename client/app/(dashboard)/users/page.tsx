@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, UserCog } from "lucide-react"
 import Link from "next/link"
 //import { CreateUserDialog } from "@/components/create-user-dialog"
+import useAuthGuard from "@/hooks/useAuthGuard"
 
 const filterOptions = [
   { label: "Name", value: "name" },
@@ -19,6 +20,9 @@ const filterOptions = [
 ]
 
 export default function UsersPage() {
+  const isChecking = useAuthGuard()
+  
+
   const [modalOpen, setModalOpen] = useState(false)
   const [modalImg, setModalImg] = useState("")
 
@@ -48,8 +52,10 @@ export default function UsersPage() {
       .catch(err => {
         console.error("Failed to fetch users:", err)
         setUsers([])
-      })
-  }, [])
+      });
+  }, []);
+
+  if (isChecking) return null 
 
  const filteredUsers = users.filter((user) => {
     const value =
@@ -209,7 +215,9 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.idType}</TableCell>
-                    <TableCell>{user.phone}</TableCell>
+                    <TableCell className={!user.phone ? "text-muted-foreground" : ""}>
+  {user.phone ? user.phone : "not given"}
+</TableCell>
                     <TableCell>
                       <div
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${

@@ -1,3 +1,4 @@
+from app.routers import authRouter
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -29,7 +30,7 @@ app.include_router(workouts_router.router, prefix="/workouts", tags=["Workouts"]
 app.include_router(community_router.router, prefix="/communities", tags=["Communities"])
 app.include_router(reportedPostsRouter.router, prefix="/reported_posts", tags=["Reported Posts"])
 app.include_router(dashboardRouter.router, prefix="/dashboard_stats", tags=["Dashboard"])
-
+app.include_router(authRouter.router, prefix="/auth", tags=["Auth"])
 
 @app.get("/")
 async def root():

@@ -1,5 +1,5 @@
 "use client"
-
+import React, {useState} from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSidebar } from "./sidebar-provider"
@@ -8,18 +8,9 @@ import { LayoutDashboard, Users, Wallet, BarChart3, Settings, HelpCircle, LogOut
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronUp} from "lucide-react"
-import { useState } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPeopleGroup } from "@fortawesome/free-solid-svg-icons"
 
-const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Users", href: "/users", icon: Users, badge: "8" },
-  { name: "Community", href: "/comms", icon: () => <FontAwesomeIcon icon={faPeopleGroup} className="h-5 w-5" /> },  
-  { name: "Reports", href: "/reports", icon: FileText },
-  { name:"Manage Workout",href:"/manage-workout",icon:Dumbbell}
-  
-]
 
 const footerItems = [
   {
@@ -37,6 +28,7 @@ const footerItems = [
 ]
 
 export function Sidebar() {
+  const [userCount, setUserCount] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -45,6 +37,22 @@ export function Sidebar() {
     // localStorage.removeItem('adminToken');
     router.push('/login');
   };
+
+    React.useEffect(() => {
+    fetch("http://localhost:8000/users/count")
+      .then(res => res.json())
+      .then(data => setUserCount(data.count))
+      .catch(() => setUserCount(null));
+  }, []);
+
+  const navItems = [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Users", href: "/users", icon: Users, badge: userCount !== null ? String(userCount) : undefined },
+    { name: "Community", href: "/comms", icon: () => <FontAwesomeIcon icon={faPeopleGroup} className="h-5 w-5" /> },  
+    { name: "Reports", href: "/reports", icon: FileText },
+    //{ name:"Manage Workout",href:"/manage-workout",icon:Dumbbell}
+  ];
+
 return (
   <>
     <div

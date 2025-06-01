@@ -165,7 +165,9 @@ export default function CommunityInfoPage(props: { params: Promise<{ id: string 
         </TableCell>
         <TableCell>{member.email}</TableCell>
         <TableCell>{member.role}</TableCell>
-        <TableCell>{member.phone}</TableCell>
+        <TableCell className={!member.phone ? "text-muted-foreground" : ""}>
+  {member.phone ? member.phone : "not given"}
+</TableCell>
         <TableCell>
           <div
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${

@@ -1,4 +1,5 @@
 "use client";
+import toast, { Toaster } from "react-hot-toast";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,8 +43,14 @@ function HistoryModal({ item, onClose }: { item: any; onClose: () => void }) {
         <h2 className="text-lg font-bold mb-2">
           {item.type === "post" ? "Post Details" : "Comment Details"}
         </h2>
-        <p className="mb-2">{item.description}</p>
-        <p className="text-sm text-muted-foreground">Date: {item.date}</p>
+        {item.content && (
+          <div className="mb-4">
+            <span className="font-semibold">Content:</span>
+            <div className="mt-1">{item.content}</div>
+          </div>
+        )}
+        <p className="mb-2">{item.message}</p>
+        <p className="text-sm text-muted-foreground">Date: {item.timestamp}</p>
         <button
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
           onClick={onClose}
@@ -57,17 +64,61 @@ function HistoryModal({ item, onClose }: { item: any; onClose: () => void }) {
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
   const { id } = params;
-
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [selectedHistory, setSelectedHistory] = useState<any | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
+    displayName: "",
     email: "",
     idType: "",
     phone: "",
     status: "",
   });
+
+  useEffect(() => {
+    fetch(`http://localhost:8000/users/${id}/history`)
+      .then(res => res.json())
+      .then(data => {
+        setHistory(data.history || []);
+        setLoadingHistory(false);
+      });
+  }, [id]);
+
+  useEffect(() => {
+    fetch(`http://localhost:8000/users/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Fetched user data:", data);
+        setUser(data);
+        setForm({
+          name: data.username || "",
+          displayName: data.display_name || "",
+          email: data.email || "",
+          idType: data.role || "",
+          phone: data.phone_no || "",
+          status: data.status || "",
+        });
+      });
+  }, [id]);
+
+  useEffect(() => {
+    fetch(`http://localhost:8000/users/${id}/followers`)
+      .then(res => res.json())
+      .then(data => {
+        setFollowersCount(data.followers_count || 0);
+      });
+
+    fetch(`http://localhost:8000/users/${id}/following`)
+      .then(res => res.json())
+      .then(data => {
+        setFollowingCount(data.following_count || 0);
+      });
+  }, [id]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -87,28 +138,12 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         throw new Error("Failed to update user");
       }
 
-      alert("User updated successfully!");
+      toast.success("User updated successfully!");
     } catch (error) {
       console.error(error);
       alert("Error updating user");
     }
   };
-
-  useEffect(() => {
-    fetch(`http://localhost:8000/users/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Fetched user data:", data);
-        setUser(data);
-        setForm({
-          name: data.username || "",
-          email: data.email || "",
-          idType: data.role || "",
-          phone: data.phone_no || "",
-          status: data.status || "",
-        });
-      });
-  }, [id]);
 
   if (!user) return <div>Loading...</div>;
 
@@ -117,8 +152,12 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
     return `${day}/${month}/${year}`;
   }
 
+  // ...rest of your component (JSX return)
+
+
   return (
     <div className="flex flex-col gap-4">
+      <Toaster position="bottom-right" />
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/users">
@@ -158,26 +197,39 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               <CardDescription>View and update user profile details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username"> Username</Label>
-                  <Input id="username" value={form.name} readOnly />
-                </div>
-              </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="space-y-2">
+    <Label htmlFor="username">Username</Label>
+    <Input id="username" value={form.name} readOnly />
+  </div>
+  <div className="space-y-2">
+    <Label htmlFor="displayName">Display Name</Label>
+<Input
+  id="displayName"
+  value={form.displayName}
+  readOnly
+  placeholder="not given"
+  className={!form.displayName ? "text-muted-foreground" : ""}
+/>
+
+  </div>
+</div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={form.email} readOnly />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    value={form.phone}
-                    onChange={(e) => handleChange("phone", e.target.value)}
-                  />
-                </div>
+<div className="space-y-2">
+  <Label htmlFor="phone">Phone Number</Label>
+  <Input
+    id="phone"
+    value={form.phone}
+    readOnly
+    placeholder="not given"
+    className={!form.phone ? "text-muted-foreground" : ""}
+  />
+</div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,6 +261,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                 onClick={() =>
                   setForm({
                     name: user.username || "",
+                    displayName: user.display_name || "",
                     email: user.email || "",
                     idType: user.role || "",
                     phone: user.phone_no || "",
@@ -236,7 +289,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <CardTitle className="text-sm font-medium">Current Followers</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{user.followers}</div>
+                    <div className="text-2xl font-bold">{followersCount}</div>
                     <p className="text-xs text-muted-foreground">Last updated: Today at 12:34 PM</p>
                   </CardContent>
                 </Card>
@@ -246,7 +299,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                     <CardTitle className="text-sm font-medium">Following</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{user.following}</div>
+                    <div className="text-2xl font-bold">{followingCount}</div>
                     <p className="text-xs text-muted-foreground">Last updated: Today at 12:34 PM</p>
                   </CardContent>
                 </Card>
@@ -269,29 +322,34 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
               <CardDescription>User Activity History</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {user.history && user.history.length > 0 ? (
-                  user.history.map((item: any, idx: number) => (
-                    <li
-                      key={idx}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-2 py-1"
-                      onClick={() => setSelectedHistory(item)}
-                    >
-                      {item.type === "post" && (
-                        <span className="font-medium text-blue-600">📝</span>
-                      )}
-                      {item.type === "comment" && (
-                        <span className="font-medium text-green-600">💬</span>
-                      )}
-                      <span>
-                        {item.description} on {formatDate(item.date)}
-                      </span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-muted-foreground">No history yet.</li>
-                )}
-              </ul>
+{loadingHistory ? (
+  <div className="text-center text-muted-foreground text-sm">Loading history...</div>
+) : (
+  <div
+    style={{ maxHeight: 400, overflowY: "auto" }}
+    className="pr-2 space-y-2"
+  >
+    {history.length > 0 ? (
+  history.map((item, idx) => (
+    <div
+      key={idx}
+      className="flex items-center min-h-[60px] hover:bg-muted/40 rounded p-2 cursor-pointer"
+      onClick={() => setSelectedHistory(item)}
+    >
+      <span className="text-xl mr-3">
+        {item.type === "post" ? "📝" : item.type === "comment" ? "💬" : "📌"}
+      </span>
+      <div>
+        <div className="text-sm font-medium">{item.message}</div>
+        <div className="text-xs text-muted-foreground">{item.timestamp}</div>
+      </div>
+    </div>
+  ))
+) : (
+  <div className="text-muted-foreground text-sm">No history yet.</div>
+)}
+  </div>
+)}
             </CardContent>
           </Card>
           {selectedHistory && (
