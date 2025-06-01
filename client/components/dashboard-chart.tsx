@@ -5,9 +5,21 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 
 export function DashboardChart() {
   const [mounted, setMounted] = useState(false)
+  const [data, setData] = useState<any[]>([])
+
 
   useEffect(() => {
     setMounted(true)
+    fetch("http://localhost:8000/dashboard_stats/post-overview")
+      .then(res => res.json())
+      .then(res => {
+        setData(
+          (res.post_overview || []).map((item: any) => ({
+            name: item.month,
+            total: item.post_count,
+          }))
+        )
+      })
   }, [])
 
   if (!mounted) {
@@ -46,53 +58,3 @@ export function DashboardChart() {
   )
 }
 
-const data = [
-  {
-    name: "Jan",
-    total: 45000,
-  },
-  {
-    name: "Feb",
-    total: 63500,
-  },
-  {
-    name: "Mar",
-    total: 58200,
-  },
-  {
-    name: "Apr",
-    total: 72800,
-  },
-  {
-    name: "May",
-    total: 85600,
-  },
-  {
-    name: "Jun",
-    total: 92400,
-  },
-  {
-    name: "Jul",
-    total: 105200,
-  },
-  {
-    name: "Aug",
-    total: 91000,
-  },
-  {
-    name: "Sep",
-    total: 97500,
-  },
-  {
-    name: "Oct",
-    total: 110800,
-  },
-  {
-    name: "Nov",
-    total: 142500,
-  },
-  {
-    name: "Dec",
-    total: 168000,
-  },
-]

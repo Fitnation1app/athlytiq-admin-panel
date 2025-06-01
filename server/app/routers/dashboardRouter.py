@@ -40,41 +40,66 @@ async def get_post_overview():
 @router.get("/recent-posts")
 async def get_recent_posts():
     try:
-        response = (
+        # Step 1: Fetch all posts with user info and profile picture
+        posts_response = (
             supabase.table("posts")
-            .select(
-                """
+            .select("""
                 id,
                 content,
                 created_at,
-                user:user_id(username),
-                post_type
-                """
-            )
+                post_type,
+                user:user_id(
+                    username,
+                    profiles(profile_picture_url)
+                )
+            """)
             .order("created_at", desc=True)
-            .limit(5)
             .execute()
         )
 
-        if not response.data:
+        if not posts_response.data:
             return {"recent_posts": []}
 
-        # Format response
         posts = []
-        for item in response.data:
+        post_ids = [post["id"] for post in posts_response.data]
+
+        # Step 2: Fetch all reactions for those posts
+        reacts_response = (
+            supabase.table("post_reacts")
+            .select("post_id, react_type")
+            .in_("post_id", post_ids)
+            .execute()
+        )
+
+        # Step 3: Group reactions by post and type
+        react_map = {}
+        for react in reacts_response.data:
+            pid = react["post_id"]
+            rtype = react["react_type"]
+            if pid not in react_map:
+                react_map[pid] = {}
+            react_map[pid][rtype] = react_map[pid].get(rtype, 0) + 1
+
+        # Step 4: Combine everything
+        for post in posts_response.data:
+            if not post.get("content"):
+                continue
+            user = post.get("user", {})
+            profile = user.get("profiles") or {}
             posts.append({
-                "id": item["id"],
-                "username": item.get("user", {}).get("username", "Unknown"),
-                "content": item["content"],
-                "created_at": item["created_at"],
-                "post_type": item.get("post_type", "unknown")
+                "id": post["id"],
+                "username": user.get("username", "Unknown"),
+                "profile_picture_url": profile.get("profile_picture_url", ""),
+                "content": post["content"],
+                "created_at": post["created_at"],
+                "post_type": post.get("post_type", "unknown"),
+                "reactions": react_map.get(post["id"], {})
             })
 
         return {"recent_posts": posts}
 
     except Exception as e:
         return {"error": str(e)}
-
 
 @router.get("/dashboard-metrics")
 async def get_dashboard_metrics(view: str = Query("daily", enum=["daily", "weekly", "monthly"])):
@@ -164,7 +189,96 @@ def count_rows(table: str, time_col: str, start: str, end: str, extra_filter: di
     return len(result.data or [])
 
 
-def calculate_change(current: int, previous: int) -> float:
+def calculate_change(current: int, previous: int) -> float | str:
     if previous == 0:
-        return 100.0 if current > 0 else 0.0
+        if current == 0:
+            return 0.0
+        return "N/A"  # or "∞", or "new", or return None and handle it in the frontend
     return round(((current - previous) / previous) * 100, 2)
+
+
+
+@router.get("/notifications")
+async def get_notifications():
+    try:
+        notifications = []
+
+        # --- 1. New User Signups ---
+        users = (
+            supabase.table("users")
+            .select("id, username, created_at")
+            .order("created_at", desc=True)
+            .limit(10)
+            .execute()
+        )
+        for user in users.data:
+            notifications.append({
+                "type": "signup",
+                "user": user["username"],
+                "time": user["created_at"],
+                "message": f"{user['username']} has signed up!"
+            })
+
+        # --- 2. New Posts ---
+        posts = (
+            supabase.table("posts")
+            .select("id, created_at, user_id, users!posts_user_id_fkey(username)")
+            .order("created_at", desc=True)
+            .limit(10)
+            .execute()
+        )
+        for post in posts.data:
+            username = post.get("users", {}).get("username", "Unknown")
+            notifications.append({
+                "type": "post_upload",
+                "user": username,
+                "time": post["created_at"],
+                "message": f"{username} uploaded a post."
+            })
+
+        # --- 3. Reported Posts (no created_at column yet) ---
+        reports = (
+            supabase.table("reported_posts")
+            .select("reportedby_userid, users!reported_posts_reportedby_userid_fkey(username)")
+            .limit(10)
+            .execute()
+        )
+        for report in reports.data:
+            username = report.get("users", {}).get("username", "Unknown")
+            notifications.append({
+                "type": "report",
+                "user": username,
+                "time": "Unknown time",  # fallback since no timestamp
+                "message": f"{username} reported a post."
+            })
+
+        # --- 4. Comments ---
+        comments = (
+            supabase.table("post_comments")
+            .select("id, created_at, user_id, users!post_comments_user_id_fkey(username)")
+            .order("created_at", desc=True)
+            .limit(10)
+            .execute()
+        )
+        for comment in comments.data:
+            username = comment.get("users", {}).get("username", "Unknown")
+            notifications.append({
+                "type": "comment",
+                "user": username,
+                "time": comment["created_at"],
+                "message": f"{username} commented on a post."
+            })
+
+        # Sort only those with timestamps
+        def sort_key(x):
+            try:
+                return x["time"]
+            except:
+                return ""
+
+        notifications.sort(key=sort_key, reverse=True)
+
+        return {"notifications": notifications}
+
+    except Exception as e:
+        return {"error": str(e)}

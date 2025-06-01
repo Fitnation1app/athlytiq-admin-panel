@@ -1,28 +1,53 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ThumbsUp } from "lucide-react"
+import PostModal from "./postModal"
 
 export function RecentTransactions() {
+  const [selectedPost, setSelectedPost] = useState<any>(null)
   const [visibleCount, setVisibleCount] = useState(5)
-  const sortedPosts = [...communityPosts].sort((a, b) => b.reacts - a.reacts)
+  const [posts, setPosts] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch("http://localhost:8000/dashboard_stats/recent-posts")
+      .then(res => res.json())
+      .then(data => setPosts(data.recent_posts || []))
+  }, [])
+
+  const sortedPosts = [...posts].sort((a, b) => {
+    // Sort by total reactions (sum of all reaction types)
+    const reactsA = Object.values(a.reactions || {}).reduce((sum: number, v: any) => sum + Number(v), 0)
+    const reactsB = Object.values(b.reactions || {}).reduce((sum: number, v: any) => sum + Number(v), 0)
+    return reactsB - reactsA
+  })
   const visiblePosts = sortedPosts.slice(0, visibleCount)
 
   return (
     <div className="space-y-8">
       {visiblePosts.map((post) => (
-        <div key={post.id} className="flex items-center">
+        <div
+          key={post.id}
+          className="flex items-center cursor-pointer hover:bg-muted/40 rounded p-2"
+          onClick={() => setSelectedPost(post)}
+        >
           <Avatar className="h-9 w-9 border">
-            <AvatarFallback>{post.author[0]}</AvatarFallback>
-          </Avatar>
+  {post.profile_picture_url ? (
+    <img src={post.profile_picture_url} alt={post.username} className="h-9 w-9 rounded-full object-cover" />
+  ) : (
+    <AvatarFallback>{post.username?.[0] ?? "U"}</AvatarFallback>
+  )}
+</Avatar>
           <div className="ml-4 space-y-1">
-            <p className="text-sm font-medium leading-none">{post.author}</p>
-            <p className="text-sm text-muted-foreground">{post.date}</p>
+            <p className="text-sm font-medium leading-none">{post.username}</p>
+            <p className="text-sm text-muted-foreground">
+              {new Date(post.created_at).toLocaleDateString()}
+            </p>
             <p className="text-xs text-muted-foreground truncate max-w-xs">{post.content}</p>
           </div>
           <div className="ml-auto flex items-center font-medium text-blue-600">
             <ThumbsUp className="h-4 w-4 mr-1" />
-            {post.reacts}
+            {Object.values(post.reactions || {}).reduce((sum: number, v: any) => sum + Number(v), 0)}
           </div>
         </div>
       ))}
@@ -36,44 +61,9 @@ export function RecentTransactions() {
           </button>
         </div>
       )}
+      {selectedPost && (
+        <PostModal post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   )
 }
-
-const communityPosts = [
-  {
-    id: "1",
-    author: "Ibrahim Reza Rabbi",
-    content: "Just finished a 10km run with the club! 🏃‍♂️",
-    date: "14/11/2023",
-    reacts: 25,
-  },
-  {
-    id: "2",
-    author: "Arcum Bin Almas",
-    content: "Yoga session at sunrise was amazing! 🌅",
-    date: "13/11/2023",
-    reacts: 40,
-  },
-  {
-    id: "3",
-    author: "Iftekharul Islam Iftee",
-    content: "Who's joining the HIIT challenge this weekend?",
-    date: "12/11/2023",
-    reacts: 18,
-  },
-  {
-    id: "4",
-    author: "Ruslan Sunbeeb",
-    content: "Meal prep tips for busy athletes?",
-    date: "11/11/2023",
-    reacts: 12,
-  },
-  {
-    id: "5",
-    author: "Mir Sayef Ali",
-    content: "Congrats to everyone who completed the marathon!",
-    date: "10/11/2023",
-    reacts: 33,
-  },
-]

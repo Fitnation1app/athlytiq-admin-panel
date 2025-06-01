@@ -1,13 +1,13 @@
-import { useEffect, useRef } from "react";
-import { Post } from "../app/types/post";
+import { useEffect, useRef } from "react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 type PostModalProps = {
-  post: Post;
-  onClose: () => void;
-};
+  post: any // Accept any, or define a type matching your backend
+  onClose: () => void
+}
 
 export default function PostModal({ post, onClose }: PostModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -15,14 +15,16 @@ export default function PostModal({ post, onClose }: PostModalProps) {
         modalRef.current &&
         !modalRef.current.contains(event.target as Node)
       ) {
-        onClose();
+        onClose()
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [onClose]);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [onClose])
+
+  if (!post) return null
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
@@ -37,21 +39,27 @@ export default function PostModal({ post, onClose }: PostModalProps) {
           X
         </button>
         <div className="flex items-center space-x-3 mb-4">
-          <div className="h-10 w-10 bg-gray-300 rounded-full" />
+<Avatar className="h-10 w-10">
+  {post.profile_picture_url ? (
+    <img src={post.profile_picture_url} alt={post.username} className="h-10 w-10 rounded-full object-cover" />
+  ) : (
+    <AvatarFallback>{post.username?.[0] ?? "U"}</AvatarFallback>
+  )}
+</Avatar>
           <div>
-            <p className="font-semibold">{post.author}</p>
+            <p className="font-semibold">{post.username}</p>
           </div>
         </div>
-        {post.imageUrl && (
+        {post.media_url && (
           <img
-            src={post.imageUrl}
+            src={post.media_url}
             alt="post"
             className="rounded-lg mb-4 w-full max-h-60 object-cover"
           />
         )}
-        <p className="text-lg font-medium mb-2">{post.postTitle}</p>
+        <div className="font-mono break-words mb-2">{post.id}</div>
         <p className="text-gray-700">{post.content}</p>
       </div>
     </div>
-  );
+  )
 }
