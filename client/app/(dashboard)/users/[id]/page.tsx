@@ -62,8 +62,8 @@ function HistoryModal({ item, onClose }: { item: any; onClose: () => void }) {
   );
 }
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [user, setUser] = useState<any>(null);
