@@ -22,7 +22,7 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
 
   const removePost = (reported_post_id: string) => {
     if (!confirm("Are you sure you want to remove this post permanently?")) return;
-    fetch(`/api/reported_posts/remove/${reported_post_id}`, { method: "DELETE" })
+    fetch(`http://localhost:8000/reported_posts/remove/${reported_post_id}`, { method: "DELETE" })
       .then(res => {
         if (!res.ok) throw new Error("Failed to remove post");
         toast.success("Post removed successfully!");
@@ -33,19 +33,22 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
   return (
     <div className="p-6">
       <Toaster position="bottom-right" />
-      <h2 className="text-2xl font-semibold mb-4">Reported Posts - Aithletic</h2>
-      <div className="space-y-4">
+      <h2 className="text-2xl font-semibold mb-2">Reported Posts - Aithletiq</h2>
+      <div className="space-y-2">
         {reports.map((report) => (
           <div
             key={report.reported_post_id} // Use reported_post_id as key!
-            className="flex items-center justify-between bg-white rounded-lg shadow border px-4 py-3 hover:bg-gray-50"
+            className="flex items-center justify-between bg-white rounded-lg shadow border px-5  py-3 hover:bg-gray-50"
           >
             <div className="flex items-center gap-3">
+              <div className="flex flex-col px-3">
+              <span className="text-sm text-gray-500">reported</span>
+
               {report.reportedByPhoto ? (
                 <img
                   src={report.reportedByPhoto}
                   alt={report.reportedBy}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full m-2 object-cover"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold text-white">
@@ -55,14 +58,17 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
               <Link href={`/users/${report.reportedById}`}>
                 <span className="text-sm font-bold text-black hover:underline">{report.reportedBy}</span>
               </Link>
+              </div>
+              <br></br>
+              <br></br>
+              <div className="flex flex-col">
 
-              <span className="text-sm text-gray-500">reported a post by</span>
-
+              <span className="text-sm text-gray-500">post by:</span>
               {report.reportedUserPhoto ? (
                 <img
-                  src={report.reportedUserPhoto}
+                  src={report.reportedUserPhoto} 
                   alt={report.author}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full  m-2 object-cover"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold text-white">
@@ -72,9 +78,11 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
               <Link href={`/users/${report.reportedUserId}`}>
                 <span className="text-sm font-bold text-black hover:underline">{report.author}</span>
               </Link>
+              </div>
             </div>
 
             <div className="flex flex-col text-sm">
+              <div className="flex flex-row">
               <span className="text-xs text-gray-500">
                 Reason:{" "}
                 {Array.isArray(report.report_tags) && report.report_tags.length > 0 ? (
@@ -98,6 +106,7 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
                   ) : null
                 )}
               </span>
+              </div>
               <span className="text-xs text-gray-600 mt-1">
                 View post:{" "}
                 <span
