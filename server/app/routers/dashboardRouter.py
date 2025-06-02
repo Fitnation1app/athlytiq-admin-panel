@@ -150,7 +150,7 @@ async def get_dashboard_metrics(view: str = Query("daily", enum=["daily", "weekl
         posts_change = calculate_change(posts, posts_prev)
 
         # --- Restricted Users ---
-        restricted = count_rows("users", "created_at", start_iso, end_iso, extra_filter={"status": "suspended"})
+        restricted = count_rows("users", extra_filter={"status": "suspended"})
         restricted_prev = count_rows("users", "created_at", prev_start_iso, prev_end_iso, extra_filter={"status": "suspended"})
         restricted_change = calculate_change(restricted, restricted_prev)
 
@@ -182,8 +182,10 @@ async def get_dashboard_metrics(view: str = Query("daily", enum=["daily", "weekl
         return {"error": str(e)}
 
 
-def count_rows(table: str, time_col: str, start: str, end: str, extra_filter: dict = None) -> int:
-    query = supabase.table(table).select("id").gte(time_col, start).lte(time_col, end)
+def count_rows(table: str, time_col: str = None, start: str = None, end: str = None, extra_filter: dict = None) -> int:
+    query = supabase.table(table).select("id")
+    if time_col and start and end:
+        query = query.gte(time_col, start).lte(time_col, end)
     if extra_filter:
         for k, v in extra_filter.items():
             query = query.eq(k, v)
