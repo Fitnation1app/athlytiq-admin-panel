@@ -70,6 +70,8 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   const [selectedHistory, setSelectedHistory] = useState<any | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [followersLastUpdated, setFollowersLastUpdated] = useState<string | null>(null);
+  const [followingLastUpdated, setFollowingLastUpdated] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -106,19 +108,21 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       });
   }, [id]);
 
-  useEffect(() => {
-    fetch(`http://localhost:8000/users/${id}/followers`)
-      .then(res => res.json())
-      .then(data => {
-        setFollowersCount(data.followers_count || 0);
-      });
+useEffect(() => {
+  fetch(`http://localhost:8000/users/${id}/followers`)
+    .then(res => res.json())
+    .then(data => {
+      setFollowersCount(data.followers_count || 0);
+      setFollowersLastUpdated(data.last_updated || null);
+    });
 
-    fetch(`http://localhost:8000/users/${id}/following`)
-      .then(res => res.json())
-      .then(data => {
-        setFollowingCount(data.following_count || 0);
-      });
-  }, [id]);
+  fetch(`http://localhost:8000/users/${id}/following`)
+    .then(res => res.json())
+    .then(data => {
+      setFollowingCount(data.following_count || 0);
+      setFollowingLastUpdated(data.last_updated || null);
+    });
+}, [id]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -290,7 +294,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{followersCount}</div>
-                    <p className="text-xs text-muted-foreground">Last updated: Today at 12:34 PM</p>
+                    <p className="text-xs text-muted-foreground">Last updated:  {followersLastUpdated ? new Date(followersLastUpdated).toLocaleDateString("en-GB") : "N/A"}</p>
                   </CardContent>
                 </Card>
 
@@ -300,7 +304,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{followingCount}</div>
-                    <p className="text-xs text-muted-foreground">Last updated: Today at 12:34 PM</p>
+                    <p className="text-xs text-muted-foreground">Last updated: {followingLastUpdated ? new Date(followingLastUpdated).toLocaleDateString("en-GB") : "N/A"}</p>
                   </CardContent>
                 </Card>
               </div>

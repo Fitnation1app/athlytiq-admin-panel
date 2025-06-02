@@ -60,10 +60,10 @@ async def get_user(id: str):
 @router.get("/{id}/followers")
 async def get_user_followers(id: str):
     try:
-        # Step 1: Get all entries where someone has this user as a buddy
+        # Get all entries where someone has this user as a buddy, include created_at
         response = (
             supabase.table("gym_buddies")
-            .select("user_id")  # these are the followers
+            .select("user_id, created_at")
             .eq("buddy_id", id)
             .execute()
         )
@@ -72,12 +72,14 @@ async def get_user_followers(id: str):
             return {
                 "user_id": id,
                 "followers_count": 0,
-                "followers": []
+                "followers": [],
+                "last_updated": None
             }
 
         follower_ids = [row["user_id"] for row in response.data]
+        last_updated = max([row["created_at"] for row in response.data]) if response.data else None
 
-        # Step 2: Get follower details from users table
+        # Get follower details from users table
         followers_response = (
             supabase.table("users")
             .select("id, username, email, status, phone_no, role, profiles(profile_picture_url)")
@@ -87,7 +89,6 @@ async def get_user_followers(id: str):
 
         followers = followers_response.data if isinstance(followers_response.data, list) else [followers_response.data]
 
-        # Step 3: Flatten profile_picture_url
         for user in followers:
             profile = user.get("profiles")
             user["profile_picture_url"] = profile.get("profile_picture_url", "") if isinstance(profile, dict) else ""
@@ -96,7 +97,8 @@ async def get_user_followers(id: str):
         return {
             "user_id": id,
             "followers_count": len(followers),
-            "followers": followers
+            "followers": followers,
+            "last_updated": last_updated
         }
 
     except Exception as e:
@@ -139,7 +141,7 @@ async def get_user_following(id: str):
     try:
         response = (
             supabase.table("gym_buddies")
-            .select("buddy_id")
+            .select("buddy_id, created_at")
             .eq("user_id", id)
             .execute()
         )
@@ -148,10 +150,12 @@ async def get_user_following(id: str):
             return {
                 "user_id": id,
                 "following_count": 0,
-                "following": []
+                "following": [],
+                "last_updated": None
             }
 
         buddy_ids = [row["buddy_id"] for row in response.data]
+        last_updated = max([row["created_at"] for row in response.data]) if response.data else None
 
         following_response = (
             supabase.table("users")
@@ -170,12 +174,12 @@ async def get_user_following(id: str):
         return {
             "user_id": id,
             "following_count": len(following),
-            "following": following
+            "following": following,
+            "last_updated": last_updated
         }
 
     except Exception as e:
         return {"error": str(e)}
-
 
 
 @router.get("/{id}/history")
