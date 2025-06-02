@@ -12,7 +12,7 @@ type ReportTableProps = {
 const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
   const ignoreReport = async (reported_post_id: string) => {
     try {
-      const res = await fetch(`/api/reports/ignore/${reported_post_id}`, { method: "DELETE" });
+      const res = await fetch(`http://localhost:8000/reported_posts/ignore/${reported_post_id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to ignore report");
       toast.success("Report ignored successfully!");
     } catch (error: any) {
@@ -22,7 +22,7 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
 
   const removePost = (reported_post_id: string) => {
     if (!confirm("Are you sure you want to remove this post permanently?")) return;
-    fetch(`/api/reports/remove/${reported_post_id}`, { method: "DELETE" })
+    fetch(`/api/reported_posts/remove/${reported_post_id}`, { method: "DELETE" })
       .then(res => {
         if (!res.ok) throw new Error("Failed to remove post");
         toast.success("Post removed successfully!");
