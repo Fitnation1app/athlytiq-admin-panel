@@ -33,7 +33,7 @@ const ReportTable: React.FC<ReportTableProps> = ({ reports, onPostClick }) => {
   return (
     <div className="p-6">
       <Toaster position="bottom-right" />
-      <h2 className="text-2xl font-semibold mb-4">Reported Posts - FitNation</h2>
+      <h2 className="text-2xl font-semibold mb-4">Reported Posts - Aithletic</h2>
       <div className="space-y-4">
         {reports.map((report) => (
           <div
